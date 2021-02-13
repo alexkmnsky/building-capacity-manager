@@ -2,7 +2,6 @@ import time
 import socket
 from multiprocessing import Process, Manager
 import tkinter as tk
-from gpiozero import LightSensor
 
 HEADER = 64
 PORT = 5050
@@ -27,22 +26,30 @@ def handle_client(client, address, clients, global_namespace):
 	connected = True
 	while connected:
 		try:
-			msg_length = client.recv(HEADER).decode(FORMAT)
+			msg_length = ""
+			while msg_length == "":
+				msg_length = client.recv(HEADER).decode(FORMAT)
+
+			msg_length = int(msg_length)
+			msg = client.recv(msg_length).decode(FORMAT)
 		except ConnectionResetError:
 			break
+		except ConnectionAbortedError:
+			break
 
-		#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		# TODO DONT LET THE CLIENT CRASH THIS!!!
-		#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-		msg_length = int(msg_length)
-		msg = client.recv(msg_length).decode(FORMAT)
 		if msg == DISCONNECT_MESSAGE:
 			connected = False
 		elif msg == "!RESET":
 			global_namespace.number_of_people = 0
 		elif msg.split()[0] == "!SET":
 			global_namespace.number_of_people = int(msg.split()[1])
+		elif msg.split()[0] == "!MAXIMUM":
+			global_namespace.maximum_capacity = int(msg.split()[1])
+		elif msg == "!INCREMENT":
+			global_namespace.increment = 1
+		elif msg == "!DECREMENT":
+			global_namespace.increment = -1
+
 		print(f"[{address[0]}:{address[1]}] {msg}")
 
 	for i, c in enumerate(clients):
@@ -53,7 +60,10 @@ def handle_client(client, address, clients, global_namespace):
 def broadcast(clients, global_namespace):
 	while True:
 		for client in clients:
-			send(client[1], str(global_namespace.number_of_people))
+			try:
+				send(client[1], str(global_namespace.number_of_people) + " " + str(global_namespace.maximum_capacity))
+			except:
+				pass
 		time.sleep(0.2)
 		
 # def gui(global_namespace):
@@ -65,19 +75,26 @@ def broadcast(clients, global_namespace):
 # 	root.mainloop()
 
 def check_ldr(global_namespace):
-	ldr = LightSensor(LDR_PIN)
-	LIGHT_THRESHOLD = 0.4
-	intersection = False
-	intersection_previous = intersection
-
-	while True:
-		intersection = ldr.value < LIGHT_THRESHOLD
-
-		if intersection and not intersection_previous:
-			global_namespace.number_of_people += 1
-
+	try:
+		from gpiozero import LightSensor
+	except ImportError:
+		print("Failed to import gpiozero")
+	try:
+		ldr = LightSensor(LDR_PIN)
+		LIGHT_THRESHOLD = 0.4
+		intersection = False
 		intersection_previous = intersection
-		time.sleep(0.05)
+
+		while True:
+			intersection = ldr.value < LIGHT_THRESHOLD
+
+			if intersection and not intersection_previous:
+				global_namespace.number_of_people += global_namespace.increment
+
+			intersection_previous = intersection
+			time.sleep(0.05)
+	except:
+		print("Lightsensor fail")
 
 if __name__ == "__main__":
 
@@ -91,6 +108,7 @@ if __name__ == "__main__":
 
 		global_namespace = manager.Namespace()
 		global_namespace.number_of_people = 0
+		global_namespace.maximum_capacity = 100
 
 		print(f"[LISTENING] Server is listening on {IP}:{PORT}")
 		

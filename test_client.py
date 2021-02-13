@@ -4,7 +4,7 @@ from multiprocessing import Process, Manager
 import time
 
 HEADER = 64
-IP = "192.168.200.132"
+IP = "192.168.200.130"
 PORT = 5050
 ADDRESS = (IP, PORT)
 FORMAT = "utf-8"
@@ -23,7 +23,7 @@ def recieve_messages(server, global_namespace):
 		msg_length = server.recv(HEADER).decode(FORMAT)
 		msg_length = int(msg_length)
 		msg = server.recv(msg_length).decode(FORMAT)
-		global_namespace.number_of_people = int(msg)
+		global_namespace.number_of_people = int(msg.split()[0])
 
 def gui(server, global_namespace):
 	root = tk.Tk()
