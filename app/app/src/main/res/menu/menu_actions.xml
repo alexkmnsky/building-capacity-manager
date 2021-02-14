@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@drawable/ic_baseline_settings_24"
+        android:onClick="onSettingsClick"
+        android:title="Settings"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_increment"
+        android:onClick="onIncrementClick"
+        android:title="Set sensor as entrance" />
+    <item
+        android:id="@+id/action_decrement"
+        android:onClick="onDecrementClick"
+        android:title="Set sensor as exit" />
+
+</menu>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="Connection">
+
+        <EditTextPreference
+            android:defaultValue="127.0.0.1"
+            android:key="ip_address"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="(ex. 192.168.200.15, 127.0.0.1, etc.)"
+            android:title="IP Address" />
+        <EditTextPreference
+            android:defaultValue="5050"
+            android:key="port"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="(default 5050)"
+            android:title="Port" />
+
+    </PreferenceCategory>
+</PreferenceScreen>
