@@ -12,9 +12,10 @@ FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECT"
 
 LDR_PIN = 4
-LIGHT_THRESHOLD = 0.4
+LIGHT_THRESHOLD = 0.5
 
-SOUND_COMMAND = "aplay ./Desktop/notify.wav"
+SOUND_COMMAND_NOTIFY = "aplay ./Desktop/notify.wav"
+SOUND_COMMAND_REGISTER = "aplay ./Desktop/register.wav"
 
 def send(client, message):
 	message_encoded = message.encode(FORMAT)
@@ -94,11 +95,13 @@ def check_ldr(global_namespace):
 
 			if intersection and not intersection_previous:
 				global_namespace.number_of_people = max(0, global_namespace.number_of_people + global_namespace.increment)
-				if global_namespace.number_of_people >= global_namespace.maximum_capacity:
-					os.system(SOUND_COMMAND)
+				if global_namespace.number_of_people >= global_namespace.maximum_capacity and global_namespace.increment == 1:
+					os.system(SOUND_COMMAND_NOTIFY)
+				else:
+					os.system(SOUND_COMMAND_REGISTER)
 
 			intersection_previous = intersection
-			time.sleep(0.05)
+			time.sleep(0.01)
 	except:
 		print("Lightsensor fail")
 
