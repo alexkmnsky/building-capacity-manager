@@ -2,6 +2,7 @@ import time
 import socket
 from multiprocessing import Process, Manager
 import tkinter as tk
+import os
 
 HEADER = 64
 PORT = 5050
@@ -11,6 +12,9 @@ FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECT"
 
 LDR_PIN = 4
+LIGHT_THRESHOLD = 0.4
+
+SOUND_COMMAND = "aplay ./Desktop/notify.wav"
 
 def send(client, message):
 	message_encoded = message.encode(FORMAT)
@@ -42,7 +46,7 @@ def handle_client(client, address, clients, global_namespace):
 		elif msg == "!RESET":
 			global_namespace.number_of_people = 0
 		elif msg.split()[0] == "!SET":
-			global_namespace.number_of_people = int(msg.split()[1])
+			global_namespace.number_of_people = max(0, int(msg.split()[1]))
 		elif msg.split()[0] == "!MAXIMUM":
 			global_namespace.maximum_capacity = int(msg.split()[1])
 		elif msg == "!INCREMENT":
@@ -51,6 +55,7 @@ def handle_client(client, address, clients, global_namespace):
 			global_namespace.increment = -1
 
 		print(f"[{address[0]}:{address[1]}] {msg}")
+		time.sleep(0.1)
 
 	for i, c in enumerate(clients):
 		if c[0] == address:
@@ -81,7 +86,6 @@ def check_ldr(global_namespace):
 		print("Failed to import gpiozero")
 	try:
 		ldr = LightSensor(LDR_PIN)
-		LIGHT_THRESHOLD = 0.4
 		intersection = False
 		intersection_previous = intersection
 
@@ -89,7 +93,9 @@ def check_ldr(global_namespace):
 			intersection = ldr.value < LIGHT_THRESHOLD
 
 			if intersection and not intersection_previous:
-				global_namespace.number_of_people += global_namespace.increment
+				global_namespace.number_of_people = max(0, global_namespace.number_of_people + global_namespace.increment)
+				if global_namespace.number_of_people >= global_namespace.maximum_capacity:
+					os.system(SOUND_COMMAND)
 
 			intersection_previous = intersection
 			time.sleep(0.05)
@@ -109,6 +115,7 @@ if __name__ == "__main__":
 		global_namespace = manager.Namespace()
 		global_namespace.number_of_people = 0
 		global_namespace.maximum_capacity = 100
+		global_namespace.increment = 1
 
 		print(f"[LISTENING] Server is listening on {IP}:{PORT}")
 		
